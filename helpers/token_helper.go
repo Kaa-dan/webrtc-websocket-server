@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -8,7 +9,9 @@ import (
 
 	"github.com/Kaa-dan/webrtc-websocket-server.git/database"
 	"github.com/golang-jwt/jwt/v4"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type SignedDetail struct {
@@ -20,26 +23,26 @@ type SignedDetail struct {
 	jwt.RegisteredClaims
 }
 
-type TokenManager struct {
+type TokenHelper struct {
 	userCollection *mongo.Collection
 	secretKey      string
 }
 
-// creates new TokenManager instance
-func NewTokenManager() *TokenManager {
+// creates new TokenHelper instance
+func NewTokenHelper() *TokenHelper {
 
 	secretKey := os.Getenv("SECRET_KEY")
 	if secretKey == "" {
 		log.Fatal("SECRET_KEY is env is not set")
 	}
-	return &TokenManager{
+	return &TokenHelper{
 		userCollection: database.GetCollection("users"),
 		secretKey:      secretKey,
 	}
 }
 
 // GenerateAllTokens  : generates both access and refresh token
-func (tm *TokenManager) GeneratAllToken(email, firstName, lastName, userType, uid string) (string, string, error) {
+func (tm *TokenHelper) GeneratAllToken(email, firstName, lastName, userType, uid string) (string, string, error) {
 	// Create claims for access token (expires in 24 hours)
 	claims := &SignedDetail{
 		Email:      email,
@@ -69,7 +72,7 @@ func (tm *TokenManager) GeneratAllToken(email, firstName, lastName, userType, ui
 	}
 
 	// Generate access token
-	token, err := jwt.NewWithClaims(jwt.SigningMethodES256, claims).SignedString([]byte(tm.secretKey))
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(tm.secretKey))
 
 	if err != nil {
 		return "", "", fmt.Errorf("failed to generate access token: %w", err)
@@ -85,7 +88,7 @@ func (tm *TokenManager) GeneratAllToken(email, firstName, lastName, userType, ui
 
 // ValidateToken validate the JWT  token and returns claims
 
-func (tm *TokenManager) ValidateToken(signedToken string) (*SignedDetail, error) {
+func (tm *TokenHelper) ValidateToken(signedToken string) (*SignedDetail, error) {
 	token, err := jwt.ParseWithClaims(
 		signedToken,
 		&SignedDetail{},
@@ -109,4 +112,27 @@ func (tm *TokenManager) ValidateToken(signedToken string) (*SignedDetail, error)
 	}
 
 	return claims, nil
+}
+
+// UpdateAllTokens updates both access and refresh tokens in the database
+func (tm *TokenHelper) UpdateAllTokens(signedToken, signedRefreshToken, userId string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	updateObj := bson.D{
+		{Key: "token", Value: signedToken},
+		{Key: "refresh_token", Value: signedRefreshToken},
+		{Key: "updated_at", Value: time.Now()},
+	}
+
+	filter := bson.M{"user_id": userId}
+	update := bson.D{{Key: "$set", Value: updateObj}}
+	opts := options.Update().SetUpsert(true)
+
+	_, err := tm.userCollection.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		return fmt.Errorf("failed to update tokens: %w", err)
+	}
+
+	return nil
 }

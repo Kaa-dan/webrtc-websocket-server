@@ -4,10 +4,14 @@ import (
 	"log"
 
 	"github.com/Kaa-dan/webrtc-websocket-server.git/database"
+	"github.com/Kaa-dan/webrtc-websocket-server.git/handlers"
+	"github.com/Kaa-dan/webrtc-websocket-server.git/helpers"
+	"github.com/Kaa-dan/webrtc-websocket-server.git/managers"
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
-func main() {
+func init() {
 	// Loading env variabes from .env file
 	if err := godotenv.Load(); err != nil {
 		log.Println(".env file not found")
@@ -15,5 +19,15 @@ func main() {
 
 	// connect to DB
 	database.ConnectDB()
+}
 
+func main() {
+	// router setup
+	router := gin.Default()
+	//auth
+	tokenHelper := helpers.NewTokenHelper()
+	authManager := managers.NewAuthManager(tokenHelper)
+	authHandler := handlers.NewAuthHandler(authManager)
+
+	router.Run()
 }
