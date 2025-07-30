@@ -29,5 +29,6 @@ func main() {
 	authManager := managers.NewAuthManager(tokenHelper)
 	authHandler := handlers.NewAuthHandler(authManager)
 
+	authHandler.RegisterAuthApis(router)
 	router.Run()
 }

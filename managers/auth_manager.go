@@ -17,3 +17,7 @@ func NewAuthManager(token_Helper *helpers.TokenHelper) *AuthManager {
 		userCollection: database.GetCollection("users"),
 	}
 }
+
+func (authMan *AuthManager) SignUp() {
+
+}
