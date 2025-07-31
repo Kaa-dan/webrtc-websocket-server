@@ -1,15 +1,11 @@
 package commons
 
 import (
+	"fmt"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
-
-func IsValidEmail(email string) bool {
-	// Basic email validation - you might want to use a more robust solution
-	return strings.Contains(email, "@") && strings.Contains(email, ".")
-}
 
 // HashPassword hashes the password using bcrypt
 func HashPassword(password string, bCost int) (string, error) {
@@ -22,6 +18,7 @@ func HashPassword(password string, bCost int) (string, error) {
 
 // HandleValidationError handles input validation errors with predefined error messages
 func HandleValidationError(userData *SignupInput) error {
+	fmt.Println("user_data", userData)
 	if userData == nil {
 		return ErrInvalidInput
 	}
@@ -35,9 +32,15 @@ func HandleValidationError(userData *SignupInput) error {
 	}
 
 	// Add email format validation if needed
-	if IsValidEmail(userData.Email) {
+	if !IsValidEmail(userData.Email) {
 		return ErrInvalidEmail
 	}
 
 	return nil
+}
+
+func IsValidEmail(email string) bool {
+	// Basic email validation - you might want to use a more robust solution
+	email = strings.TrimSpace(email)
+	return strings.Contains(email, "@") && strings.Contains(email, ".")
 }

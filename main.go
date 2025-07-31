@@ -7,6 +7,7 @@ import (
 	"github.com/Kaa-dan/webrtc-websocket-server.git/handlers"
 	"github.com/Kaa-dan/webrtc-websocket-server.git/helpers"
 	"github.com/Kaa-dan/webrtc-websocket-server.git/managers"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -24,6 +25,11 @@ func init() {
 func main() {
 	// router setup
 	router := gin.Default()
+	//logger middleware setup
+	router.Use(gin.Logger())
+	// cors setup
+	router.Use(cors.Default())
+
 	//auth route setup
 	tokenHelper := helpers.NewTokenHelper()
 	authManager := managers.NewAuthManager(tokenHelper)
