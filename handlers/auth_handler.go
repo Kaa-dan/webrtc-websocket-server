@@ -30,19 +30,19 @@ func (h *AuthHandler) RegisterAuthApis(r *gin.Engine) {
 func (h *AuthHandler) SignUp(ctx *gin.Context) {
 	userData := commons.NewSignupInput()
 	if err := ctx.ShouldBindJSON(userData); err != nil {
-		commons.HandleError(ctx, http.StatusBadRequest, "Invalid JSON data", err)
+		commons.HandleBadRequest(ctx, http.StatusBadRequest, "Invalid JSON data", err)
 		return
 	}
 
 	// Validate input data
 	if err := commons.HandleValidationError(userData); err != nil {
-		commons.HandleCustomError(ctx, err, "Validation failed")
+		commons.HandleBadRequest(ctx, http.StatusBadRequest, "Validation failed", err)
 		return
 	}
 
 	newUser, err := h.authManager.SignUp(userData)
 	if err != nil {
-		commons.HandleCustomError(ctx, err, "Failed to create user")
+		commons.HandleBadRequest(ctx, http.StatusBadRequest, "Failed to create user", err)
 		return
 	}
 

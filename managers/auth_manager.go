@@ -79,9 +79,9 @@ func (aM *AuthManager) SignUp(user *commons.SignupInput) (*models.User, error) {
 		Username:      &user.Username,
 		Email:         &user.Email,
 		Password:      &hashedPasswordStr,
-		Token:         nil, // Will be set during login
+		Token:         nil,
 		User_type:     &userType,
-		Refresh_token: nil, // Will be set during login
+		Refresh_token: nil,
 		Created_at:    time.Now(),
 		Updated_at:    time.Now(),
 		User_id:       userId,
