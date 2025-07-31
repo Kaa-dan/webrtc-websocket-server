@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/Kaa-dan/webrtc-websocket-server.git/commons"
 	"github.com/Kaa-dan/webrtc-websocket-server.git/managers"
 	"github.com/gin-gonic/gin"
 )
@@ -27,14 +28,23 @@ func (h *AuthHandler) RegisterAuthApis(r *gin.Engine) {
 }
 
 func (h *AuthHandler) SignUp(ctx *gin.Context) {
+	userData := commons.NewSignupInput()
+	if err := ctx.ShouldBindJSON(userData); err != nil {
+		commons.HandleError(ctx, http.StatusBadRequest, "Invalid JSON data", err)
+		return
+	}
 
-	h.handleSuccess(ctx, http.StatusCreated, "User created successfully")
-}
+	// Validate input data
+	if err := commons.HandleValidationError(userData); err != nil {
+		commons.HandleCustomError(ctx, err, "Validation failed")
+		return
+	}
 
-func (h *AuthHandler) handleSuccess(ctx *gin.Context, statusCode int, message string) {
-	ctx.JSON(statusCode, gin.H{
-		"success": true,
-		"message": message,
-		// "data":    data,
-	})
+	newUser, err := h.authManager.SignUp(userData)
+	if err != nil {
+		commons.HandleCustomError(ctx, err, "Failed to create user")
+		return
+	}
+
+	commons.HandleSuccess(ctx, http.StatusCreated, "User created successfully", newUser)
 }
