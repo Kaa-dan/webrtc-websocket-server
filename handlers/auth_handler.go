@@ -14,7 +14,7 @@ type AuthHandler struct {
 
 func NewAuthHandler(auth_Manager *managers.AuthManager) *AuthHandler {
 	return &AuthHandler{
-		groupName:   "/api/users",
+		groupName:   "/api/auth",
 		authManager: auth_Manager,
 	}
 }
@@ -22,11 +22,12 @@ func NewAuthHandler(auth_Manager *managers.AuthManager) *AuthHandler {
 func (h *AuthHandler) RegisterAuthApis(r *gin.Engine) {
 	authGroup := r.Group(h.groupName)
 	{
-		authGroup.POST("", h.SignUp)
+		authGroup.POST("/sign-up", h.SignUp)
 	}
 }
 
 func (h *AuthHandler) SignUp(ctx *gin.Context) {
+
 	h.handleSuccess(ctx, http.StatusCreated, "User created successfully")
 }
 
